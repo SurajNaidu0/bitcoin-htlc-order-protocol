@@ -12,9 +12,9 @@
           "visibility": "public"
         }
       ],
-      "package": "basic_bitcoin",
+      "package": "bitcoin-project",
       "type": "custom",
-      "wasm": "target/wasm32-unknown-unknown/release/basic_bitcoin.wasm",
+      "wasm": "target/wasm32-unknown-unknown/release/bitcoin_project.wasm",
       "init_arg": "(variant { testnet })"
     }
   },
