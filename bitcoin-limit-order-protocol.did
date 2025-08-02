@@ -1,0 +1,51 @@
+service : {
+  // Initialize the canister with network configuration
+  init : (variant { testnet; mainnet; regtest });
+  
+  // Create a new limit order with HTLC
+  create_limit_order : (record {
+    maker_address : text;
+    taker_address : text;
+    amount_btc : nat64;
+    price_sats_per_token : nat64;
+    expiry_time : nat64;
+    hash_lock : blob;
+  }) -> (variant { Ok : text; Err : text });
+  
+  // Fill an existing limit order
+  fill_limit_order : (record {
+    order_id : text;
+    preimage : blob;
+  }) -> (variant { Ok : text; Err : text });
+  
+  // Cancel an expired limit order
+  cancel_limit_order : (record {
+    order_id : text;
+  }) -> (variant { Ok : text; Err : text });
+  
+  // Get order details
+  get_order : (text) -> (opt record {
+    maker_address : text;
+    taker_address : text;
+    amount_btc : nat64;
+    price_sats_per_token : nat64;
+    expiry_time : nat64;
+    hash_lock : blob;
+    status : variant { Active; Filled; Cancelled; Expired };
+  });
+  
+  // List all active orders
+  list_active_orders : () -> (vec record {
+    order_id : text;
+    maker_address : text;
+    amount_btc : nat64;
+    price_sats_per_token : nat64;
+    expiry_time : nat64;
+  });
+  
+  // Get Bitcoin balance for an address
+  get_balance : (text) -> (nat64);
+  
+  // Get current Bitcoin network
+  get_network : () -> (variant { testnet; mainnet; regtest });
+}

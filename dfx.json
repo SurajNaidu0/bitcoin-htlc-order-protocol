@@ -1,20 +1,20 @@
 {
   "version": 1,
   "canisters": {
-    "basic_bitcoin": {
+    "bitcoin_htlc_order_protocol": {
       "build": "build.sh",
-      "candid": "basic_bitcoin.did",
+      "candid": "bitcoin-limit-order-protocol.did",
       "gzip": true,
       "metadata": [
         {
           "name": "candid:service",
-          "path": "basic_bitcoin.did",
+          "path": "bitcoin-limit-order-protocol.did",
           "visibility": "public"
         }
       ],
-      "package": "basic_bitcoin",
+      "package": "bitcoin_htlc_order_protocol",
       "type": "custom",
-      "wasm": "target/wasm32-unknown-unknown/release/basic_bitcoin.wasm",
+      "wasm": "target/wasm32-unknown-unknown/release/bitcoin_htlc_order_protocol.wasm",
       "init_arg": "(variant { testnet })"
     }
   },
