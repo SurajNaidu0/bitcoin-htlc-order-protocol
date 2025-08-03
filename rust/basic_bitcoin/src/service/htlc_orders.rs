@@ -13,6 +13,7 @@ use crate::{
 };
 use ic_cdk::bitcoin_canister::{
     bitcoin_get_utxos, bitcoin_send_transaction, GetUtxosRequest, SendTransactionRequest,
+    bitcoin_get_balance, GetBalanceRequest,
 };
 use bitcoin::consensus::serialize;
 
@@ -22,6 +23,14 @@ pub struct HtlcDetail {
     pub time_lock: u64,
     pub secret_hash: String,
     pub htlc_address: Option<String>, // P2WPKH address for this HTLC
+}
+
+#[derive(CandidType, Clone)]
+pub struct WithdrawInfo {
+    pub account_address: String,        // The order's P2WPKH address (source)
+    pub account_balance: u64,           // Balance of the account address in satoshis
+    pub htlc_address: String,           // The P2WSH HTLC address (destination)
+    pub order_details: HtlcDetail,      // The order details
 }
 
 #[derive(CandidType, Clone)]
@@ -203,6 +212,59 @@ fn generate_p2wsh_htlc_address(
 
     let address = Address::p2wsh(&script_buf, network);
     Ok(address)
+}
+
+/// Reads withdrawal information for an HTLC order without executing the transaction
+/// Returns account address, balance, HTLC address, and order details
+#[update]
+pub async fn read_from_withdraw_from_order(order_no: u64, responder_pubkey: String) -> Result<WithdrawInfo, String> {
+    let ctx = BTC_CONTEXT.with(|ctx| ctx.get());
+
+    // Get the order details
+    let order = STORAGE.with(|s| {
+        s.borrow().orders.get(&order_no).cloned()
+    });
+
+    let order = match order {
+        Some(order) => order,
+        None => return Err(format!("Order {} does not exist", order_no)),
+    };
+
+    // Validate responder public key
+    PublicKey::from_str(&responder_pubkey)
+        .map_err(|_| "Invalid responder public key".to_string())?;
+
+    // Generate P2WSH HTLC address
+    let htlc_address = generate_p2wsh_htlc_address(
+        &order.secret_hash,
+        &order.initiator_pubkey,
+        &responder_pubkey,
+        order.time_lock,
+        ctx.bitcoin_network,
+    )?;
+
+    // Get the P2WPKH address for this order (account address)
+    let derivation_path = DerivationPath::p2wpkh(order_no as u32, 0);
+    let own_public_key = get_ecdsa_public_key(&ctx, derivation_path.to_vec_u8_path()).await;
+    let own_compressed_public_key = CompressedPublicKey::from_slice(&own_public_key)
+        .map_err(|e| format!("Failed to create public key: {}", e))?;
+    let account_address = Address::p2wpkh(&own_compressed_public_key, ctx.bitcoin_network);
+
+    // Get balance of the account address
+    let account_balance = bitcoin_get_balance(&GetBalanceRequest {
+        address: account_address.to_string(),
+        network: ctx.network,
+        min_confirmations: None,
+    })
+    .await
+    .map_err(|e| format!("Failed to get balance: {:?}", e))?;
+
+    Ok(WithdrawInfo {
+        account_address: account_address.to_string(),
+        account_balance,
+        htlc_address: htlc_address.to_string(),
+        order_details: order,
+    })
 }
 
 /// Withdraws funds from an HTLC order by creating a P2WSH HTLC address and sending funds to it
