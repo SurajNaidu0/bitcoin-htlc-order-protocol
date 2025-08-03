@@ -39,6 +39,7 @@ type htlc_detail = record {
   initiator_pubkey : text;
   time_lock : nat64;
   secret_hash : text;
+  htlc_address : opt text;
 };
 
 type get_block_headers_response = record {
@@ -75,6 +76,7 @@ service : (network) -> {
   "get_order" : (order_no: nat64) -> (opt htlc_detail) query;
   "get_all_orders" : () -> (vec record { nat64; htlc_detail }) query;
   "get_next_order_no" : () -> (nat64) query;
+  "get_htlc_address" : (order_no: nat64) -> (variant { Ok: text; Err: text });
 
   "send_from_p2pkh_address" : (
     record {

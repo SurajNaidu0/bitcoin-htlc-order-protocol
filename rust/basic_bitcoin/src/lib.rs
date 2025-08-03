@@ -88,5 +88,5 @@ pub struct SendRequest {
 
 // Re-export HTLC functionality
 pub use service::htlc_orders::{
-    create_order, get_order, get_all_orders, get_next_order_no, greet, HtlcDetail
+    create_order, get_order, get_all_orders, get_next_order_no, greet, get_htlc_address, HtlcDetail
 };
