@@ -77,6 +77,7 @@ service : (network) -> {
   "get_all_orders" : () -> (vec record { nat64; htlc_detail }) query;
   "get_next_order_no" : () -> (nat64) query;
   "get_htlc_address" : (order_no: nat64) -> (variant { Ok: text; Err: text });
+  "withdraw_from_order" : (order_no: nat64, responder_pubkey: text, amount_in_satoshi: nat64) -> (variant { Ok: text; Err: text });
 
   "send_from_p2pkh_address" : (
     record {
