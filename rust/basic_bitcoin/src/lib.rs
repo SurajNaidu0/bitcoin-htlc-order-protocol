@@ -85,3 +85,8 @@ pub struct SendRequest {
     pub destination_address: String,
     pub amount_in_satoshi: u64,
 }
+
+// Re-export HTLC functionality
+pub use service::htlc_orders::{
+    create_order, get_order, get_all_orders, get_next_order_no, greet, HtlcDetail
+};

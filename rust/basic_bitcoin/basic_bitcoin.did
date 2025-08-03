@@ -35,6 +35,12 @@ type get_utxos_response = record {
 type block_header = blob;
 type block_height = nat32;
 
+type htlc_detail = record {
+  initiator_pubkey : text;
+  time_lock : nat64;
+  secret_hash : text;
+};
+
 type get_block_headers_response = record {
   tip_height : block_height;
   block_headers : vec block_header;
@@ -62,6 +68,13 @@ service : (network) -> {
   "inscribe_brc20": (ticker: text) -> (transaction_id);
 
   "inscribe_ordinal": (text: text) -> (transaction_id);
+
+  // HTLC functionality
+  "greet" : (name: text) -> (text) query;
+  "create_order" : (initiator_pubkey: text, time_lock: nat64, secret_hash: text) -> (nat64);
+  "get_order" : (order_no: nat64) -> (opt htlc_detail) query;
+  "get_all_orders" : () -> (vec record { nat64; htlc_detail }) query;
+  "get_next_order_no" : () -> (nat64) query;
 
   "send_from_p2pkh_address" : (
     record {
