@@ -323,6 +323,23 @@ pub async fn withdraw_from_order(order_no: u64, responder_pubkey: String, amount
         return Err("No UTXOs available for this order".to_string());
     }
 
+    // Check if there's enough balance before proceeding
+    let account_balance = bitcoin_get_balance(&GetBalanceRequest {
+        address: own_address.to_string(),
+        network: ctx.network,
+        min_confirmations: None,
+    })
+    .await
+    .map_err(|e| format!("Failed to get balance: {:?}", e))?;
+
+    if account_balance < amount_in_satoshi {
+        return Err(format!(
+            "Insufficient balance: {} satoshis available, but {} satoshis requested", 
+            account_balance, 
+            amount_in_satoshi
+        ));
+    }
+
     // Build the transaction that sends `amount` to the HTLC address
     let fee_per_byte = get_fee_per_byte(&ctx).await;
     let (transaction, prevouts) = p2wpkh::build_transaction(
